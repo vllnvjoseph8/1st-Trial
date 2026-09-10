@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mechanic - Guided Repair Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; color: #333; }
+        header { background: #232f3e; color: white; padding: 20px; text-align: center; border-radius: 8px; }
+        .card { background: white; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn { background: #ff9900; color: black; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Smart Mechanic Assistant</h1>
+        <p>Upload your manual to begin guided repair</p>
+    </header>
+
+    <div class="card">
+        <h2>Task 1: Manual Upload Options</h2>
+        <p>Select a technical manual PDF to extract procedures, tools, and safety data.</p>
+        <input type="file" id="manual-upload" accept=".pdf" style="margin-bottom: 15px;"><br>
+        <button class="btn" onclick="alert('PDF parsing requires a backend server. Frontend interface is ready!')">Upload Manual</button>
+    </div>
+
+    <div class="card">
+        <h2>Navigation Links</h2>
+        <ul>
+            <li><a href="#">Repair Selection Dashboard</a></li>
+            <li><a href="#">Guided Repair Mode (Voice Enabled)</a></li>
+            <li><a href="#">Service History Log</a></li>
+        </ul>
+    </div>
+
+</body>
+</html>
