@@ -145,6 +145,72 @@
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
+
+        /* Task 7: AI Mechanic Chat Box Styles */
+        .chat-container {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: var(--light-bg);
+            display: flex;
+            flex-direction: column;
+            height: 350px;
+            margin-top: 15px;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 0.95rem;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+
+        .message.user {
+            background-color: var(--accent);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .message.ai {
+            background-color: #e2e8f0;
+            color: #2d3748;
+            align-self: flex-start;
+        }
+
+        .chat-input-row {
+            display: flex;
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            background: white;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .chat-submit {
+            margin-left: 10px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -170,6 +236,23 @@
                     <input type="file" id="pdfFile" accept=".pdf" style="display:none;" onchange="mockUpload()">
                     <button class="btn" onclick="document.getElementById('pdfFile').click()">Choose Manual PDF</button>
                     <p id="uploadStatus" style="margin-top:10px; color:#666;">No document loaded.</p>
+                </div>
+            </div>
+
+            <!-- Task 7 Contextual AI Assistant Window Card -->
+            <div class="card">
+                <h2>Contextual AI Mechanic Assistant</h2>
+                <p>Ask technical questions about torque settings, security specifications, or system procedures extracted from your manuals.</p>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatBox">
+                        <div class="message ai">
+                            <strong>AI Mechanic:</strong> System parameters online. I have analyzed manual <strong>ID-9082 (Alternator Calibration Setup)</strong>. Ask me anything about this operation!
+                        </div>
+                    </div>
+                    <div class="chat-input-row">
+                        <input type="text" id="userInput" class="chat-input" placeholder="Ask about torque specs, tools, safety guidelines..." onkeypress="if(event.key === 'Enter') sendAIMessage()">
+                        <button class="chat-submit" onclick="sendAIMessage()">Ask AI</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -205,63 +288,3 @@
                 <h2 id="activeRepairName" style="color: var(--accent);">No Procedure Loaded</h2>
                 <div style="background:#2c3e50; padding:20px; border-radius:6px; margin: 20px 0;">
                     <h3 id="stepNumber">Step 1 of 3</h3>
-                    <p id="stepText" style="font-size:1.2rem;">Please select a system procedure task inside the "Repair Procedures" menu to initialize steps.</p>
-                </div>
-                
-                <div class="controls-row">
-                    <button class="btn" onclick="changeStep(-1)">⬅️ Back</button>
-                    <button class="btn var-btn" onclick="repeatStep()">🔄 Repeat</button>
-                    <button class="btn btn-danger" onclick="alert('Contextual AI: Checking system parameters...')">❓ Help AI</button>
-                    <button class="btn" onclick="changeStep(1)">Next ➡️</button>
-                </div>
-
-                <div class="controls-row" style="margin-top: 20px;">
-                    <button class="btn btn-success" onclick="toggleVoice()">🎙️ Toggle Hands-Free Voice Control</button>
-                </div>
-                <div id="voiceIndicator" class="voice-status" style="color: #bdc3c7;">Voice Control Status: Off</div>
-            </div>
-        </div>
-
-        <!-- TAB 4: SERVICE HISTORY SCHEMA LOG -->
-        <div id="history" class="tab-content">
-            <div class="card">
-                <h1>Service History Log</h1>
-                <p>Saved archive ledger tracking completed workflows.</p>
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Completion Date</th>
-                            <th>Procedure Details</th>
-                            <th>Parts Employed</th>
-                            <th>Status Metric</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyBody">
-                        <tr>
-                            <td>2026-09-08</td>
-                            <td>Spark Plug Replacement Assembly</td>
-                            <td>NGK Laser Iridium (x4)</td>
-                            <td><span class="badge badge-easy">Verified</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Active Navigation Interface Script Logic -->
-    <script>
-        let currentStepIndex = 0;
-        let activeSteps = [];
-        let voiceActive = false;
-
-        const mockSteps = [
-            "Position the drain pan directly underneath the structural oil plug casing.",
-            "Loosen the engine core structural oil plug hex bolt using a 14mm socket tool.",
-            "Extract old filter container ring and secure your structural alternative component seal."
-        ];
-
-        function switchTab(event, tabId) {
-            event.preventDefault();
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
