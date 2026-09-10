@@ -3,265 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InstantMech AI - Guided Repair Assistant</title>
+    <title>AI Mechanic - Guided Repair Dashboard</title>
     <style>
-        :root {
-            --primary: #1a252f;
-            --accent: #3498db;
-            --success: #2ecc71;
-            --warning: #f1c40f;
-            --danger: #e74c3c;
-            --light-bg: #f8f9fa;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            background-color: #f0f2f5;
-            color: #333;
-            display: flex;
-        }
-
-        /* Sidebar navigation layout */
-        .sidebar {
-            width: 260px;
-            background-color: var(--primary);
-            color: white;
-            min-height: 100vh;
-            padding: 20px 0;
-            position: fixed;
-        }
-
-        .sidebar h2 {
-            text-align: center;
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-            color: var(--accent);
-        }
-
-        .sidebar a {
-            display: block;
-            color: #bdc3c7;
-            padding: 15px 25px;
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
-        }
-
-        .sidebar a:hover, .sidebar a.active {
-            color: white;
-            background-color: #2c3e50;
-            border-left-color: var(--accent);
-        }
-
-        /* Main Workspace Content container */
-        .main-content {
-            margin-left: 260px;
-            flex-grow: 1;
-            padding: 40px;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .card {
-            background: white;
-            padding: 25px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        h1, h2 { color: var(--primary); margin-top: 0; }
-
-        /* Buttons & Badges styling */
-        .btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 0.9rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-
-        .btn:hover { background-color: #2980b9; }
-        .btn-success { background-color: var(--success); }
-        .btn-success:hover { background-color: #27ae60; }
-        .btn-danger { background-color: var(--danger); }
-
-        .badge {
-            padding: 4px 8px;
-            font-size: 0.75rem;
-            border-radius: 4px;
-            font-weight: bold;
-            color: white;
-        }
-        .badge-easy { background-color: var(--success); }
-        .badge-med { background-color: var(--warning); color: #333; }
-
-        /* Interactive Guided Repair Mockup UI */
-        .guided-box {
-            background-color: var(--primary);
-            color: white;
-            padding: 30px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .controls-row {
-            margin-top: 25px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .voice-status {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            background: #2c3e50;
-        }
-
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .history-table th, .history-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; color: #333; }
+        header { background: #232f3e; color: white; padding: 20px; text-align: center; border-radius: 8px; }
+        .card { background: white; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn { background: #ff9900; color: black; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar Menu Section -->
-    <div class="sidebar">
-        <h2>InstantMech AI 🛠️</h2>
-        <a href="#" class="active" onclick="switchTab(event, 'dashboard')">Home Dashboard</a>
-        <a href="#" onclick="switchTab(event, 'repairs')">Repair Procedures</a>
-        <a href="#" onclick="switchTab(event, 'guided')">Guided Repair Mode</a>
-        <a href="#" onclick="switchTab(event, 'history')">Service History Log</a>
+    <header>
+        <h1>Smart Mechanic Assistant</h1>
+        <p>Upload your manual to begin guided repair</p>
+    </header>
+
+    <div class="card">
+        <h2>Task 1: Manual Upload Options</h2>
+        <p>Select a technical manual PDF to extract procedures, tools, and safety data.</p>
+        <input type="file" id="manual-upload" accept=".pdf" style="margin-bottom: 15px;"><br>
+        <button class="btn" onclick="alert('PDF parsing requires a backend server. Frontend interface is ready!')">Upload Manual</button>
     </div>
 
-    <!-- Right Workspace Dashboard Layout Area -->
-    <div class="main-content">
-
-        <!-- TAB 1: HOME SCREEN / DASHBOARD MODULE -->
-        <div id="dashboard" class="tab-content active">
-            <div class="card">
-                <h1>Welcome to InstantMech</h1>
-                <p>Upload a technical system manual to analyze diagrams, extract complex diagnostic workflows, and enable voice assistance metrics.</p>
-                <div style="border: 2px dashed #ccc; padding: 30px; text-align: center; background: var(--light-bg); border-radius: 6px; margin-top: 20px;">
-                    <input type="file" id="pdfFile" accept=".pdf" style="display:none;" onchange="mockUpload()">
-                    <button class="btn" onclick="document.getElementById('pdfFile').click()">Choose Manual PDF</button>
-                    <p id="uploadStatus" style="margin-top:10px; color:#666;">No document loaded.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: REPAIR SELECTION LAYOUT -->
-        <div id="repairs" class="tab-content">
-            <h1>Select Active Repair Procedure</h1>
-            <p>Extracted lists matching parsed engine layouts and components.</p>
-            
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>Procedure: Engine Oil Filter System Swap</h3>
-                    <span class="badge badge-easy">Easy</span>
-                </div>
-                <p><strong>Est. Time:</strong> 25 Mins | <strong>Required Tools:</strong> Socket Wrench, Oil Pan Filter</p>
-                <button class="btn" onclick="startMockRepair('Engine Oil Filter System Swap')">Start Repair Procedure</button>
-            </div>
-
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>Procedure: Alternator Belt Calibration Setup</h3>
-                    <span class="badge badge-med">Medium</span>
-                </div>
-                <p><strong>Est. Time:</strong> 50 Mins | <strong>Required Tools:</strong> Tension Gauge, Serpentine Belt Bar</p>
-                <button class="btn" onclick="startMockRepair('Alternator Belt Calibration Setup')">Start Repair Procedure</button>
-            </div>
-        </div>
-
-        <!-- TAB 3: GUIDED MODE WORKSPACE & VOICE TOGGLES -->
-        <div id="guided" class="tab-content">
-            <h1>Guided Repair Framework</h1>
-            <div class="guided-box">
-                <h2 id="activeRepairName" style="color: var(--accent);">No Procedure Loaded</h2>
-                <div style="background:#2c3e50; padding:20px; border-radius:6px; margin: 20px 0;">
-                    <h3 id="stepNumber">Step 1 of 3</h3>
-                    <p id="stepText" style="font-size:1.2rem;">Please select a system procedure task inside the "Repair Procedures" menu to initialize steps.</p>
-                </div>
-                
-                <div class="controls-row">
-                    <button class="btn" onclick="changeStep(-1)">⬅️ Back</button>
-                    <button class="btn var-btn" onclick="repeatStep()">🔄 Repeat</button>
-                    <button class="btn btn-danger" onclick="alert('Contextual AI: Checking system parameters...')">❓ Help AI</button>
-                    <button class="btn" onclick="changeStep(1)">Next ➡️</button>
-                </div>
-
-                <div class="controls-row" style="margin-top: 20px;">
-                    <button class="btn btn-success" onclick="toggleVoice()">🎙️ Toggle Hands-Free Voice Control</button>
-                </div>
-                <div id="voiceIndicator" class="voice-status" style="color: #bdc3c7;">Voice Control Status: Off</div>
-            </div>
-        </div>
-
-        <!-- TAB 4: SERVICE HISTORY SCHEMA LOG -->
-        <div id="history" class="tab-content">
-            <div class="card">
-                <h1>Service History Log</h1>
-                <p>Saved archive ledger tracking completed workflows.</p>
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Completion Date</th>
-                            <th>Procedure Details</th>
-                            <th>Parts Employed</th>
-                            <th>Status Metric</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyBody">
-                        <tr>
-                            <td>2026-09-08</td>
-                            <td>Spark Plug Replacement Assembly</td>
-                            <td>NGK Laser Iridium (x4)</td>
-                            <td><span class="badge badge-easy">Verified</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
+    <div class="card">
+        <h2>Navigation Links</h2>
+        <ul>
+            <li><a href="#">Repair Selection Dashboard</a></li>
+            <li><a href="#">Guided Repair Mode (Voice Enabled)</a></li>
+            <li><a href="#">Service History Log</a></li>
+        </ul>
     </div>
 
-    <!-- Active Navigation Interface Script Logic -->
-    <script>
-        let currentStepIndex = 0;
-        let activeSteps = [];
-        let voiceActive = false;
-
-        const mockSteps = [
-            "Position the drain pan directly underneath the structural oil plug casing.",
-            "Loosen the engine core structural oil plug hex bolt using a 14mm socket tool.",
-            "Extract old filter container ring and secure your structural alternative component seal."
-        ];
-
-        function switchTab(event, tabId) {
-            event.preventDefault();
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+</body>
+</html>
