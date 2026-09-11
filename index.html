@@ -13,6 +13,7 @@
             --danger: #e74c3c;
             --light-bg: #f8f9fa;
         }
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -43,6 +44,7 @@
             font-size: 0.95rem;
             transition: all 0.3s;
             border-left: 4px solid transparent;
+            cursor: pointer;
         }
         .sidebar a:hover, .sidebar a.active {
             color: white;
@@ -53,13 +55,10 @@
             margin-left: 260px;
             flex-grow: 1;
             padding: 40px;
+            max-width: 900px;
         }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         .card {
             background: white;
             padding: 25px;
@@ -83,6 +82,8 @@
         .btn-success { background-color: var(--success); }
         .btn-success:hover { background-color: #27ae60; }
         .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: #c0392b; }
+        .btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
         .badge {
             padding: 4px 8px;
             font-size: 0.75rem;
@@ -92,6 +93,7 @@
         }
         .badge-easy { background-color: var(--success); }
         .badge-med { background-color: var(--warning); color: #333; }
+        .badge-hard { background-color: var(--danger); }
         .guided-box {
             background-color: var(--primary);
             color: white;
@@ -104,6 +106,7 @@
             display: flex;
             justify-content: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
         .voice-status {
             display: inline-block;
@@ -112,6 +115,15 @@
             border-radius: 20px;
             font-size: 0.85rem;
             background: #2c3e50;
+        }
+        .voice-status.listening {
+            background: var(--danger);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
         }
         .history-table {
             width: 100%;
@@ -123,6 +135,8 @@
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
+        .history-table th { color: #666; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .empty-state { color: #888; font-style: italic; padding: 20px 0; }
         .chat-container {
             border: 1px solid #ddd;
             border-radius: 6px;
@@ -158,263 +172,12 @@
             color: #2d3748;
             align-self: flex-start;
         }
-        .chat-input-row {
-            display: flex;
-            border-top: 1px solid #ddd;
-            padding: 10px;
-            background: white;
-            border-bottom-left-radius: 6px;
-            border-bottom-right-radius: 6px;
-        }
-        .chat-input {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            outline: none;
-        }
-        .chat-submit {
-            margin-left: 10px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 0 20px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="sidebar">
-        <h2>InstantMech AI 🛠️</h2>
-        <a href="#" class="active" onclick="switchTab(event, 'dashboard')">Home Dashboard</a>
-        <a href="#" onclick="switchTab(event, 'repairs')">Repair Procedures</a>
-        <a href="#" onclick="switchTab(event, 'guided')">Guided Repair Mode</a>
-        <a href="#" onclick="switchTab(event, 'history')">Service History Log</a>
-    </div>
-
-    <div class="main-content">
-        <div id="dashboard" class="tab-content active">
-            <div class="card">
-                <h1>Welcome to InstantMech</h1>
-                <p>Upload a technical system manual to analyze diagrams, extract complex diagnostic workflows, and enable voice assistance metrics.</p>
-                <div style="border: 2px dashed #ccc; padding: 30px; text-align: center; background: var(--light-bg); border-radius: 6px; margin-top: 20px;">
-                    <input type="file" id="pdfFile" accept=".pdf" style="display:none;" onchange="mockUpload()">
-                    <button class="btn" onclick="document.getElementById('pdfFile').click()">Choose Manual PDF</button>
-                    <p id="uploadStatus" style="margin-top:10px; color:#666;">No document loaded.</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>Contextual AI Mechanic Assistant</h2>
-                <p>Ask technical questions about torque settings, security specifications, or system procedures extracted from your manuals.</p>
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatBox">
-                        <div class="message ai">
-                            <strong>AI Mechanic:</strong> System parameters online. I have analyzed manual <strong>ID-9082 (Alternator Calibration Setup)</strong>. Ask me anything about this operation!
-                        </div>
-                    </div>
-                    <div class="chat-input-row">
-                        <input type="text" id="userInput" class="chat-input" placeholder="Ask about torque specs, tools, safety guidelines..." onkeypress="if(event.key === 'Enter') sendAIMessage()">
-                        <button class="chat-submit" onclick="sendAIMessage()">Ask AI</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="repairs" class="tab-content">
-            <h1>Select Active Repair Procedure</h1>
-            <p>Extracted lists matching parsed engine layouts and components.</p>
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>Procedure: Engine Oil Filter System Swap</h3>
-                    <span class="badge badge-easy">Easy</span>
-                </div>
-                <p><strong>Est. Time:</strong> 25 Mins | <strong>Required Tools:</strong> Socket Wrench, Oil Pan Filter</p>
-                <button class="btn" onclick="startMockRepair('Engine Oil Filter System Swap')">Start Repair Procedure</button>
-            </div>
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>Procedure: Alternator Belt Calibration Setup</h3>
-                    <span class="badge badge-med">Medium</span>
-                </div>
-                <p><strong>Est. Time:</strong> 50 Mins | <strong>Required Tools:</strong> Tension Gauge, Serpentine Belt Bar</p>
-                <button class="btn" onclick="startMockRepair('Alternator Belt Calibration Setup')">Start Repair Procedure</button>
-            </div>
-        </div>
-
-        <div id="guided" class="tab-content">
-            <h1>Guided Repair Framework</h1>
-            <div class="guided-box">
-                <h2 id="activeRepairName" style="color: var(--accent);">No Procedure Loaded</h2>
-                <div style="background:#2c3e50; padding:20px; border-radius:6px; margin: 20px 0;">
-                    <h3 id="stepNumber">Step 1 of 3</h3>
-                    <p id="stepText" style="font-size:1.2rem;">Please select a system procedure task inside the "Repair Procedures" menu to initialize steps.</p>
-                </div>
-                <div class="controls-row">
-                    <button class="btn" onclick="changeStep(-1)">⬅️ Back</button>
-                    <button class="btn var-btn" onclick="repeatStep()">🔄 Repeat</button>
-                    <button class="btn btn-danger" onclick="alert('Contextual AI: Checking system parameters...')">❓ Help AI</button>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InstantMech AI - Guided Repair Assistant</title>
-    <style>
-        :root {
-            --primary: #1a252f;
-            --accent: #3498db;
-            --success: #2ecc71;
-            --warning: #f1c40f;
-            --danger: #e74c3c;
-            --light-bg: #f8f9fa;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            background-color: #f0f2f5;
-            color: #333;
-            display: flex;
-        }
-        .sidebar {
-            width: 260px;
-            background-color: var(--primary);
-            color: white;
-            min-height: 100vh;
-            padding: 20px 0;
-            position: fixed;
-        }
-        .sidebar h2 {
-            text-align: center;
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-            color: var(--accent);
-        }
-        .sidebar a {
+        .message .source-tag {
             display: block;
-            color: #bdc3c7;
-            padding: 15px 25px;
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
-        }
-        .sidebar a:hover, .sidebar a.active {
-            color: white;
-            background-color: #2c3e50;
-            border-left-color: var(--accent);
-        }
-        .main-content {
-            margin-left: 260px;
-            flex-grow: 1;
-            padding: 40px;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .card {
-            background: white;
-            padding: 25px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        h1, h2 { color: var(--primary); margin-top: 0; }
-        .btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 0.9rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        .btn:hover { background-color: #2980b9; }
-        .btn-success { background-color: var(--success); }
-        .btn-success:hover { background-color: #27ae60; }
-        .btn-danger { background-color: var(--danger); }
-        .badge {
-            padding: 4px 8px;
+            margin-top: 6px;
             font-size: 0.75rem;
-            border-radius: 4px;
-            font-weight: bold;
-            color: white;
-        }
-        .badge-easy { background-color: var(--success); }
-        .badge-med { background-color: var(--warning); color: #333; }
-        .guided-box {
-            background-color: var(--primary);
-            color: white;
-            padding: 30px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .controls-row {
-            margin-top: 25px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-        .voice-status {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            background: #2c3e50;
-        }
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        .history-table th, .history-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        .chat-container {
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background: var(--light-bg);
-            display: flex;
-            flex-direction: column;
-            height: 350px;
-            margin-top: 15px;
-        }
-        .chat-messages {
-            flex-grow: 1;
-            padding: 15px;
-            overflow-y: auto;
-            font-size: 0.95rem;
-            display: flex;
-            flex-direction: column;
-        }
-        .message {
-            margin-bottom: 12px;
-            padding: 10px 14px;
-            border-radius: 6px;
-            max-width: 80%;
-            line-height: 1.4;
-        }
-        .message.user {
-            background-color: var(--accent);
-            color: white;
-            align-self: flex-end;
-            margin-left: auto;
-        }
-        .message.ai {
-            background-color: #e2e8f0;
-            color: #2d3748;
-            align-self: flex-start;
+            color: #4a5568;
+            font-style: italic;
         }
         .chat-input-row {
             display: flex;
@@ -431,7 +194,7 @@
             border-radius: 4px;
             outline: none;
         }
-        .chat-submit {
+        .chat-submit, .mic-btn {
             margin-left: 10px;
             background-color: var(--primary);
             color: white;
@@ -440,23 +203,31 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        .mic-btn.listening { background-color: var(--danger); }
+        .step-progress {
+            font-size: 0.85rem;
+            color: #bdc3c7;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <h2>InstantMech AI 🛠️</h2>
-        <a href="#" class="active" onclick="switchTab(event, 'dashboard')">Home Dashboard</a>
-        <a href="#" onclick="switchTab(event, 'repairs')">Repair Procedures</a>
-        <a href="#" onclick="switchTab(event, 'guided')">Guided Repair Mode</a>
-        <a href="#" onclick="switchTab(event, 'history')">Service History Log</a>
+        <a class="active" onclick="switchTab(event, 'dashboard')">Home Dashboard</a>
+        <a onclick="switchTab(event, 'repairs')">Repair Procedures</a>
+        <a onclick="switchTab(event, 'guided')">Guided Repair Mode</a>
+        <a onclick="switchTab(event, 'history')">Service History Log</a>
     </div>
 
     <div class="main-content">
+
+        <!-- DASHBOARD -->
         <div id="dashboard" class="tab-content active">
             <div class="card">
                 <h1>Welcome to InstantMech</h1>
-                <p>Upload a technical system manual to analyze diagrams, extract complex diagnostic workflows, and enable voice assistance metrics.</p>
+                <p>Upload a technical service manual to extract procedures, tools, parts, and safety information for guided, step-by-step repair.</p>
                 <div style="border: 2px dashed #ccc; padding: 30px; text-align: center; background: var(--light-bg); border-radius: 6px; margin-top: 20px;">
                     <input type="file" id="pdfFile" accept=".pdf" style="display:none;" onchange="mockUpload()">
                     <button class="btn" onclick="document.getElementById('pdfFile').click()">Choose Manual PDF</button>
@@ -466,51 +237,329 @@
 
             <div class="card">
                 <h2>Contextual AI Mechanic Assistant</h2>
-                <p>Ask technical questions about torque settings, security specifications, or system procedures extracted from your manuals.</p>
+                <p>Ask questions about torque settings, tools, or procedures. The AI answers from the loaded manual only — it will say so if the manual doesn't cover something.</p>
                 <div class="chat-container">
                     <div class="chat-messages" id="chatBox">
                         <div class="message ai">
-                            <strong>AI Mechanic:</strong> System parameters online. I have analyzed manual <strong>ID-9082 (Alternator Calibration Setup)</strong>. Ask me anything about this operation!
+                            <strong>AI Mechanic:</strong> No manual loaded yet. Upload a manual above, or start a repair from the Repair Procedures tab, and I'll answer questions grounded in that document.
                         </div>
                     </div>
                     <div class="chat-input-row">
                         <input type="text" id="userInput" class="chat-input" placeholder="Ask about torque specs, tools, safety guidelines..." onkeypress="if(event.key === 'Enter') sendAIMessage()">
+                        <button class="mic-btn" id="micBtn" onclick="toggleDictation()" title="Push to talk">🎤</button>
                         <button class="chat-submit" onclick="sendAIMessage()">Ask AI</button>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- REPAIR PROCEDURES -->
         <div id="repairs" class="tab-content">
             <h1>Select Active Repair Procedure</h1>
-            <p>Extracted lists matching parsed engine layouts and components.</p>
+            <p>Procedures extracted from the loaded manual.</p>
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>Procedure: Engine Oil Filter System Swap</h3>
+                    <h3>Engine Oil Filter System Swap</h3>
                     <span class="badge badge-easy">Easy</span>
                 </div>
-                <p><strong>Est. Time:</strong> 25 Mins | <strong>Required Tools:</strong> Socket Wrench, Oil Pan Filter</p>
-                <button class="btn" onclick="startMockRepair('Engine Oil Filter System Swap')">Start Repair Procedure</button>
+                <p><strong>Est. Time:</strong> 25 min &nbsp;|&nbsp; <strong>Tools:</strong> Socket wrench, oil pan, filter wrench</p>
+                <p><strong>Parts:</strong> OEM oil filter, engine oil (see manual for spec)</p>
+                <button class="btn" onclick="startRepair('oilFilter')">Start Repair Procedure</button>
             </div>
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>Procedure: Alternator Belt Calibration Setup</h3>
+                    <h3>Alternator Belt Calibration Setup</h3>
                     <span class="badge badge-med">Medium</span>
                 </div>
-                <p><strong>Est. Time:</strong> 50 Mins | <strong>Required Tools:</strong> Tension Gauge, Serpentine Belt Bar</p>
-                <button class="btn" onclick="startMockRepair('Alternator Belt Calibration Setup')">Start Repair Procedure</button>
+                <p><strong>Est. Time:</strong> 50 min &nbsp;|&nbsp; <strong>Tools:</strong> Belt tension gauge, serpentine belt bar, 10mm deep socket</p>
+                <p><strong>Parts:</strong> OEM replacement alternator belt, locking nut assembly</p>
+                <p style="color: var(--danger); font-size: 0.9rem;">⚠ Disconnect the negative battery terminal before starting.</p>
+                <button class="btn" onclick="startRepair('alternatorBelt')">Start Repair Procedure</button>
             </div>
         </div>
 
+        <!-- GUIDED REPAIR MODE -->
         <div id="guided" class="tab-content">
             <h1>Guided Repair Framework</h1>
             <div class="guided-box">
                 <h2 id="activeRepairName" style="color: var(--accent);">No Procedure Loaded</h2>
                 <div style="background:#2c3e50; padding:20px; border-radius:6px; margin: 20px 0;">
-                    <h3 id="stepNumber">Step 1 of 3</h3>
-                    <p id="stepText" style="font-size:1.2rem;">Please select a system procedure task inside the "Repair Procedures" menu to initialize steps.</p>
+                    <h3 id="stepNumber">Step — of —</h3>
+                    <p id="stepText" style="font-size:1.2rem;">Select a procedure from the "Repair Procedures" tab to begin.</p>
                 </div>
                 <div class="controls-row">
-                    <button class="btn" onclick="changeStep(-1)">⬅️ Back</button>
-                    <button class="btn var-btn" onclick="repeatStep()">🔄 Repeat</button>
-                    <button class="btn btn-danger" onclick="alert('Contextual AI: Checking system parameters...')">❓ Help AI</button>
+                    <button class="btn" id="backBtn" onclick="changeStep(-1)" disabled>⬅️ Back</button>
+                    <button class="btn" id="repeatBtn" onclick="repeatStep()" disabled>🔄 Repeat</button>
+                    <button class="btn btn-danger" id="helpBtn" onclick="helpStep()" disabled>❓ Help</button>
+                    <button class="btn" id="nextBtn" onclick="changeStep(1)" disabled>Next ➡️</button>
+                </div>
+                <div class="controls-row">
+                    <button class="btn btn-success" id="handsFreeBtn" onclick="toggleHandsFree()" disabled>🎙️ Hands-Free Mode</button>
+                    <button class="btn" id="doneBtn" onclick="finishRepair()" disabled>✅ Mark Complete</button>
+                </div>
+                <div class="voice-status" id="voiceStatus">Hands-free: off</div>
+                <div class="step-progress" id="stepProgress"></div>
+            </div>
+        </div>
+
+        <!-- SERVICE HISTORY -->
+        <div id="history" class="tab-content">
+            <h1>Service History Log</h1>
+            <p>Completed repairs are recorded here for this session.</p>
+            <div class="card">
+                <table class="history-table" id="historyTable">
+                    <thead>
+                        <tr><th>Date</th><th>Procedure</th><th>Duration</th><th>Notes</th></tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr><td colspan="4" class="empty-state">No repairs completed yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ---------- Mock manual data ----------
+        // In production this comes from a real PDF parsing + RAG pipeline.
+        // Everything here is hardcoded demo data for the static prototype.
+        const PROCEDURES = {
+            oilFilter: {
+                name: "Engine Oil Filter System Swap",
+                manual: "Generic Service Manual",
+                page: 42,
+                steps: [
+                    "Warm the engine briefly, then park on level ground and engage the parking brake.",
+                    "Position the oil pan beneath the drain plug and remove the plug to drain old oil.",
+                    "Remove the old oil filter with the filter wrench; let residual oil drain fully.",
+                    "Lightly coat the new filter's gasket with fresh oil, then hand-tighten it into place.",
+                    "Replace the drain plug, refill with the manual-specified oil grade, and check the level."
+                ],
+                specs: {
+                    "oil grade": "The uploaded manual does not specify this — check your vehicle's oil cap or owner's manual.",
+                    "drain plug torque": "The uploaded manual does not specify this."
+                }
+            },
+            alternatorBelt: {
+                name: "Alternator Belt Calibration Setup",
+                manual: "Generic Service Manual",
+                page: 88,
+                steps: [
+                    "Disconnect the negative battery terminal before doing anything else.",
+                    "Release tension on the spring-loaded bracket using the serpentine belt bar.",
+                    "Carefully slide the worn belt off the alternator pulley and fan assembly.",
+                    "Route the new belt along the pulley diagram, keeping it aligned in each groove.",
+                    "Use the tension gauge to verify correct tension before locking the bracket nuts with the 10mm deep socket."
+                ],
+                specs: {
+                    "belt tension": "Manual specifies mid-range on the tension gauge scale — see page 88 diagram for exact reading.",
+                    "locking nut torque": "The uploaded manual does not specify this."
+                }
+            }
+        };
+
+        let state = {
+            manualLoaded: false,
+            activeProcedureKey: null,
+            currentStep: 0,
+            handsFree: false,
+            dictating: false,
+            startTime: null
+        };
+
+        // ---------- Tab switching ----------
+        function switchTab(evt, tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if (evt && evt.currentTarget) evt.currentTarget.classList.add('active');
+        }
+
+        // ---------- Manual upload (mocked) ----------
+        function mockUpload() {
+            const fileInput = document.getElementById('pdfFile');
+            const status = document.getElementById('uploadStatus');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            status.textContent = `Processing "${file.name}"...`;
+            setTimeout(() => {
+                state.manualLoaded = true;
+                status.textContent = `✅ Loaded: ${file.name} — procedures, tools, and specs extracted (demo data).`;
+                appendMessage('ai', `Manual analysis complete. I found procedures matching "Engine Oil Filter System Swap" and "Alternator Belt Calibration Setup". Check the Repair Procedures tab, or ask me a question here.`);
+            }, 1200);
+        }
+
+        // ---------- Repair selection ----------
+        function startRepair(key) {
+            state.activeProcedureKey = key;
+            state.currentStep = 0;
+            state.startTime = Date.now();
+            const proc = PROCEDURES[key];
+
+            document.getElementById('activeRepairName').textContent = proc.name;
+            ['backBtn','repeatBtn','helpBtn','nextBtn','handsFreeBtn','doneBtn'].forEach(id => {
+                document.getElementById(id).disabled = false;
+            });
+            renderStep();
+            switchTab(null, 'guided');
+            document.querySelectorAll('.sidebar a')[2].classList.add('active');
+            document.querySelectorAll('.sidebar a')[0].classList.remove('active');
+        }
+
+        function renderStep() {
+            const proc = PROCEDURES[state.activeProcedureKey];
+            const total = proc.steps.length;
+            document.getElementById('stepNumber').textContent = `Step ${state.currentStep + 1} of ${total}`;
+            document.getElementById('stepText').textContent = proc.steps[state.currentStep];
+            document.getElementById('stepProgress').textContent = `Source: ${proc.manual}, p.${proc.page}`;
+            document.getElementById('backBtn').disabled = state.currentStep === 0;
+            document.getElementById('nextBtn').textContent = (state.currentStep === total - 1) ? 'Finish ✅' : 'Next ➡️';
+        }
+
+        function changeStep(delta) {
+            const proc = PROCEDURES[state.activeProcedureKey];
+            const next = state.currentStep + delta;
+            if (next < 0) return;
+            if (next >= proc.steps.length) {
+                finishRepair();
+                return;
+            }
+            state.currentStep = next;
+            renderStep();
+        }
+
+        function repeatStep() {
+            renderStep();
+        }
+
+        function helpStep() {
+            const proc = PROCEDURES[state.activeProcedureKey];
+            const stepText = proc.steps[state.currentStep];
+            document.getElementById('stepText').textContent = `${stepText}\n\n💡 Tip: work slowly, keep the removed fasteners in order, and stop if anything binds or resists unexpectedly.`;
+        }
+
+        function finishRepair() {
+            const proc = PROCEDURES[state.activeProcedureKey];
+            const durationMin = Math.max(1, Math.round((Date.now() - state.startTime) / 60000));
+            addHistoryEntry(proc.name, `${durationMin} min (demo)`, 'Completed via guided mode');
+
+            document.getElementById('activeRepairName').textContent = 'No Procedure Loaded';
+            document.getElementById('stepNumber').textContent = 'Step — of —';
+            document.getElementById('stepText').textContent = 'Select a procedure from the "Repair Procedures" tab to begin.';
+            document.getElementById('stepProgress').textContent = '';
+            ['backBtn','repeatBtn','helpBtn','nextBtn','handsFreeBtn','doneBtn'].forEach(id => {
+                document.getElementById(id).disabled = true;
+            });
+            state.activeProcedureKey = null;
+            state.handsFree = false;
+            updateVoiceStatus();
+        }
+
+        // ---------- Service history ----------
+        function addHistoryEntry(procedureName, duration, notes) {
+            const tbody = document.getElementById('historyBody');
+            const emptyRow = tbody.querySelector('.empty-state');
+            if (emptyRow) emptyRow.closest('tr').remove();
+
+            const row = document.createElement('tr');
+            const date = new Date().toLocaleDateString();
+            row.innerHTML = `<td>${date}</td><td>${procedureName}</td><td>${duration}</td><td>${notes}</td>`;
+            tbody.prepend(row);
+        }
+
+        // ---------- Hands-free mode ----------
+        function toggleHandsFree() {
+            state.handsFree = !state.handsFree;
+            updateVoiceStatus();
+        }
+
+        function updateVoiceStatus() {
+            const el = document.getElementById('voiceStatus');
+            const btn = document.getElementById('handsFreeBtn');
+            if (state.handsFree) {
+                el.textContent = 'Hands-free: listening for "next", "repeat", "help", "back", "pause"';
+                el.classList.add('listening');
+                if (btn) btn.textContent = '🛑 Stop Hands-Free';
+            } else {
+                el.textContent = 'Hands-free: off';
+                el.classList.remove('listening');
+                if (btn) btn.textContent = '🎙️ Hands-Free Mode';
+            }
+        }
+
+        // ---------- AI chat (mocked, grounded-style responses) ----------
+        function appendMessage(role, text, sourceTag) {
+            const chatBox = document.getElementById('chatBox');
+            const msg = document.createElement('div');
+            msg.className = `message ${role}`;
+            msg.innerHTML = `<strong>${role === 'user' ? 'You' : 'AI Mechanic'}:</strong> ${text}` +
+                (sourceTag ? `<span class="source-tag">Source: ${sourceTag}</span>` : '');
+            chatBox.appendChild(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('userInput');
+            const question = input.value.trim();
+            if (!question) return;
+            appendMessage('user', question);
+            input.value = '';
+
+            setTimeout(() => {
+                const { text, source } = mockAnswer(question);
+                appendMessage('ai', text, source);
+            }, 500);
+        }
+
+        function mockAnswer(question) {
+            const q = question.toLowerCase();
+            const proc = state.activeProcedureKey ? PROCEDURES[state.activeProcedureKey] : null;
+
+            if (!state.manualLoaded && !proc) {
+                return { text: "No manual is loaded yet, so I don't have anything to ground an answer in. Upload a manual or start a procedure first." };
+            }
+            if (q.includes('torque')) {
+                const spec = proc ? proc.specs['locking nut torque'] || proc.specs['drain plug torque'] : null;
+                return { text: spec || "The uploaded manual does not specify this.", source: proc ? `${proc.manual}, p.${proc.page}` : undefined };
+            }
+            if (q.includes('tension')) {
+                const spec = proc && proc.specs['belt tension'];
+                return { text: spec || "The uploaded manual does not specify this." , source: proc ? `${proc.manual}, p.${proc.page}` : undefined};
+            }
+            if (q.includes('tool')) {
+                return { text: proc ? "Check the procedure card for the full tool list — it's pulled from the manual for this repair." : "Start a repair procedure so I can tell you which tools that manual calls for." };
+            }
+            if (q.includes('stuck') || q.includes('help')) {
+                return { text: "Take a breath — re-check you're at the right step, and make sure nothing is still under tension or load. Want me to repeat the current step?" };
+            }
+            return { text: "The uploaded manual does not specify this. Try asking about tools, torque, tension, or say you're stuck for guidance." };
+        }
+
+        // ---------- Voice dictation (push-to-talk, browser Speech API) ----------
+        let recognition = null;
+        function toggleDictation() {
+            const micBtn = document.getElementById('micBtn');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                appendMessage('ai', "This browser doesn't support voice dictation — you can still type your question.");
+                return;
+            }
+            if (state.dictating) {
+                recognition && recognition.stop();
+                return;
+            }
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.onstart = () => { state.dictating = true; micBtn.classList.add('listening'); };
+            recognition.onend = () => { state.dictating = false; micBtn.classList.remove('listening'); };
+            recognition.onresult = (e) => {
+                document.getElementById('userInput').value = e.results[0][0].transcript;
+                sendAIMessage();
+            };
+            recognition.start();
+        }
+    </script>
+</body>
+</html>
