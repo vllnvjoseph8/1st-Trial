@@ -359,8 +359,13 @@
             }
         };
 
+        // Your local Flask backend (app.py). Change this if you deploy it
+        // somewhere other than your own machine.
+        const BACKEND_URL = 'http://localhost:5000';
+
         let state = {
             manualLoaded: false,
+            manualId: null,       // returned by /api/manuals after a real upload
             activeProcedureKey: null,
             currentStep: 0,
             handsFree: false,
@@ -376,19 +381,40 @@
             if (evt && evt.currentTarget) evt.currentTarget.classList.add('active');
         }
 
-        // ---------- Manual upload (mocked) ----------
-        function mockUpload() {
+        // ---------- Manual upload (real: parser.py via /api/manuals) ----------
+        async function mockUpload() {
             const fileInput = document.getElementById('pdfFile');
             const status = document.getElementById('uploadStatus');
             const file = fileInput.files[0];
             if (!file) return;
 
             status.textContent = `Processing "${file.name}"...`;
-            setTimeout(() => {
+
+            const formData = new FormData();
+            formData.append('manual', file);
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/manuals`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    status.textContent = `❌ ${data.error || 'Upload failed.'}`;
+                    return;
+                }
+
                 state.manualLoaded = true;
-                status.textContent = `✅ Loaded: ${file.name} — procedures, tools, and specs extracted (demo data).`;
-                appendMessage('ai', `Manual analysis complete. I found procedures matching "Engine Oil Filter System Swap" and "Alternator Belt Calibration Setup". Check the Repair Procedures tab, or ask me a question here.`);
-            }, 1200);
+                state.manualId = data.manual_id;
+                status.textContent = `✅ Loaded: ${data.filename} — ready for questions.`;
+                appendMessage('ai', `Manual analysis complete. Ask me a question here, grounded in "${data.filename}".`);
+            } catch (err) {
+                // Most likely cause: the backend isn't running, or BACKEND_URL
+                // is wrong. Fails loudly rather than pretending it worked.
+                status.textContent = `❌ Could not reach the backend at ${BACKEND_URL}. Is app.py running?`;
+                console.error('Upload failed:', err);
+            }
         }
 
         // ---------- Repair selection ----------
@@ -500,41 +526,51 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function sendAIMessage() {
+        async function sendAIMessage() {
             const input = document.getElementById('userInput');
             const question = input.value.trim();
             if (!question) return;
             appendMessage('user', question);
             input.value = '';
 
-            setTimeout(() => {
-                const { text, source } = mockAnswer(question);
-                appendMessage('ai', text, source);
-            }, 500);
-        }
+            // "stuck"/"help" during a live guided step stays local — it's
+            // about the user's state right now, not something the manual
+            // has an answer to, so there's nothing useful to retrieve or
+            // send to the AI for it.
+            if (question.toLowerCase().includes('stuck') || question.toLowerCase().includes('help')) {
+                appendMessage('ai', "Take a breath — re-check you're at the right step, and make sure nothing is still under tension or load. Want me to repeat the current step?");
+                return;
+            }
 
-        function mockAnswer(question) {
-            const q = question.toLowerCase();
-            const proc = state.activeProcedureKey ? PROCEDURES[state.activeProcedureKey] : null;
+            if (!state.manualId) {
+                appendMessage('ai', "No manual is loaded yet, so I don't have anything to ground an answer in. Upload a manual first.");
+                return;
+            }
 
-            if (!state.manualLoaded && !proc) {
-                return { text: "No manual is loaded yet, so I don't have anything to ground an answer in. Upload a manual or start a procedure first." };
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/ask`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ manual_id: state.manualId, question })
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    appendMessage('ai', `Error: ${data.error || 'Something went wrong asking that.'}`);
+                    return;
+                }
+
+                const sourceTag = data.citations && data.citations.length
+                    ? data.citations.map(c => `p.${c.page}`).join(', ')
+                    : undefined;
+                appendMessage('ai', data.answer, sourceTag);
+            } catch (err) {
+                // Most likely cause: the backend isn't running, or
+                // BACKEND_URL is wrong. Fails loudly rather than silently
+                // going quiet in the chat window.
+                appendMessage('ai', `Could not reach the backend at ${BACKEND_URL}. Is app.py running?`);
+                console.error('Ask failed:', err);
             }
-            if (q.includes('torque')) {
-                const spec = proc ? proc.specs['locking nut torque'] || proc.specs['drain plug torque'] : null;
-                return { text: spec || "The uploaded manual does not specify this.", source: proc ? `${proc.manual}, p.${proc.page}` : undefined };
-            }
-            if (q.includes('tension')) {
-                const spec = proc && proc.specs['belt tension'];
-                return { text: spec || "The uploaded manual does not specify this." , source: proc ? `${proc.manual}, p.${proc.page}` : undefined};
-            }
-            if (q.includes('tool')) {
-                return { text: proc ? "Check the procedure card for the full tool list — it's pulled from the manual for this repair." : "Start a repair procedure so I can tell you which tools that manual calls for." };
-            }
-            if (q.includes('stuck') || q.includes('help')) {
-                return { text: "Take a breath — re-check you're at the right step, and make sure nothing is still under tension or load. Want me to repeat the current step?" };
-            }
-            return { text: "The uploaded manual does not specify this. Try asking about tools, torque, tension, or say you're stuck for guidance." };
         }
 
         // ---------- Voice dictation (push-to-talk, browser Speech API) ----------
