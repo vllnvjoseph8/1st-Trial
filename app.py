@@ -15,8 +15,10 @@ server is what makes all three possible without leaking your key.
 
 import os
 import uuid
+import traceback
 
 from flask import Flask, request, jsonify
+from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
 import requests
 
@@ -57,6 +59,24 @@ def add_cors_headers(response):
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(e):
+    # Without this, an unhandled crash returns Flask's default HTML
+    # error page -- which the frontend then fails to parse as JSON,
+    # producing a confusing "could not reach the backend" message even
+    # though the backend WAS reached and just crashed. This guarantees
+    # the frontend always gets valid JSON back, and the real traceback
+    # still prints to this terminal so you can see what broke.
+    #
+    # HTTPException (404, 405, etc.) already has the right status code
+    # and a sensible message -- only genuine crashes need the generic
+    # 500 treatment and a printed traceback.
+    if isinstance(e, HTTPException):
+        return jsonify({"error": e.description}), e.code
+    traceback.print_exc()
+    return jsonify({"error": f"Server error: {e}"}), 500
 
 
 @app.route("/api/manuals", methods=["POST"])
