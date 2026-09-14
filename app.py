@@ -17,14 +17,28 @@ import os
 import uuid
 
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
 import requests
 
 from parser import DocumentProcessingService
 from retrieval_service import ManualRetrievalService
 
+# Reads a local .env file (GEMINI_API_KEY=AIza...) into the environment
+# automatically, so you don't have to re-export the key in every new
+# terminal session. .env must be in .gitignore -- it should never be
+# committed.
+load_dotenv()
+
 MANUALS_DIR = os.path.join(os.path.dirname(__file__), "manuals")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
-ANTHROPIC_MODEL = "claude-sonnet-4-6"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# gemini-2.5-flash is on Google AI Studio's free tier (rate-limited,
+# no billing required). Fine for a demo; swap to a paid model/tier if
+# this ever needs to handle real traffic reliably.
+GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_URL = (
+    f"https://generativelanguage.googleapis.com/v1beta/models/"
+    f"{GEMINI_MODEL}:generateContent"
+)
 
 app = Flask(__name__)
 
@@ -102,36 +116,46 @@ def ask_question():
             "citations": [],
         })
 
-    if not ANTHROPIC_API_KEY:
-        return jsonify({"error": "ANTHROPIC_API_KEY is not set on the server."}), 500
+    if not GEMINI_API_KEY:
+        return jsonify({"error": "GEMINI_API_KEY is not set on the server."}), 500
 
     api_response = requests.post(
-        "https://api.anthropic.com/v1/messages",
+        GEMINI_URL,
         headers={
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY,
+            "Content-Type": "application/json",
         },
         json={
-            "model": ANTHROPIC_MODEL,
-            "max_tokens": 1000,
-            "system": context["system_prompt"],
-            "messages": [{"role": "user", "content": question}],
+            "system_instruction": {
+                "parts": [{"text": context["system_prompt"]}]
+            },
+            "contents": [
+                {"role": "user", "parts": [{"text": question}]}
+            ],
         },
         timeout=30,
     )
 
     if api_response.status_code != 200:
         return jsonify({
-            "error": f"Anthropic API error ({api_response.status_code}): "
+            "error": f"Gemini API error ({api_response.status_code}): "
                      f"{api_response.text}"
         }), 502
 
     data = api_response.json()
-    answer_text = "".join(
-        block.get("text", "") for block in data.get("content", [])
-        if block.get("type") == "text"
-    )
+    try:
+        answer_text = "".join(
+            part.get("text", "")
+            for part in data["candidates"][0]["content"]["parts"]
+        )
+    except (KeyError, IndexError):
+        # Can happen if the response was blocked by a safety filter
+        # instead of returning normal candidates -- surface the raw
+        # response rather than crashing, so it's debuggable.
+        return jsonify({
+            "error": "Gemini returned an unexpected response shape.",
+            "raw_response": data,
+        }), 502
 
     return jsonify({
         "answer": answer_text,
@@ -143,8 +167,12 @@ def ask_question():
 
 
 if __name__ == "__main__":
-    if not ANTHROPIC_API_KEY:
-        print("[WARNING] ANTHROPIC_API_KEY is not set. /api/ask will fail "
-              "until you set it, e.g.:\n"
-              "  export ANTHROPIC_API_KEY=sk-ant-...")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    if not GEMINI_API_KEY:
+        print("[WARNING] GEMINI_API_KEY is not set. /api/ask will fail "
+              "until you set it, e.g. in a .env file:\n"
+              "  GEMINI_API_KEY=AIza...")
+    # host="127.0.0.1" (not "0.0.0.0") means only THIS machine can reach
+    # the server -- nobody else on your WiFi network can. debug=False
+    # avoids exposing Werkzeug's interactive debugger. For a local demo
+    # you don't need either of the more permissive settings.
+    app.run(host="127.0.0.1", port=5000, debug=False)
