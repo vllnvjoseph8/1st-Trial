@@ -31,10 +31,15 @@ load_dotenv()
 
 MANUALS_DIR = os.path.join(os.path.dirname(__file__), "manuals")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-# gemini-2.5-flash is on Google AI Studio's free tier (rate-limited,
-# no billing required). Fine for a demo; swap to a paid model/tier if
-# this ever needs to handle real traffic reliably.
-GEMINI_MODEL = "gemini-2.5-flash"
+# "gemini-flash-latest" is Google's alias that auto-points to the
+# current stable Flash release, rather than a specific version string.
+# Google has been retiring specific Flash model names every few months
+# through 2026 (2.5-flash is already gone) -- pinning to a literal
+# version here would just mean hitting this same 404 again later.
+# Tradeoff: behavior can shift slightly whenever Google hot-swaps what
+# "latest" points to. Fine for a demo; pin to a specific dated version
+# instead if you need output to stay perfectly consistent over time.
+GEMINI_MODEL = "gemini-flash-latest"
 GEMINI_URL = (
     f"https://generativelanguage.googleapis.com/v1beta/models/"
     f"{GEMINI_MODEL}:generateContent"
